@@ -1,0 +1,72 @@
+name: Build Demucs-GUI macOS ARM64
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Commit to build'
+        required: true
+        default: 'main'
+
+jobs:
+  build:
+    runs-on: macos-14
+    name: Build Demucs-GUI macOS ARM64
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: 'build-repo'
+
+      - name: Checkout Demucs GUI
+        uses: actions/checkout@v4
+        with:
+          repository: 'CarlGao4/Demucs-Gui'
+          ref: ${{ github.event.inputs.commit }}
+          fetch-depth: 0
+          submodules: 'recursive'
+          path: 'Demucs-Gui'
+
+      - name: Install miniconda
+        run: |
+          mkdir -p ./miniconda3
+          curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o ./miniconda3/miniconda.sh
+          bash ./miniconda3/miniconda.sh -b -u -p ./miniconda3
+          rm -rf ./miniconda3/miniconda.sh
+          ./miniconda3/bin/conda init bash
+
+      - name: Set up conda environment
+        run: |
+          conda create -n DemucsPack python=3.11
+          conda activate DemucsPack
+          pip install -r Demucs-Gui/requirements.txt
+          pip cache purge
+          pip install pyinstaller
+          pip cache purge
+
+      - name: Prepare data
+        run: |
+          mkdir ./build
+          cp -r Demucs-Gui/GUI/ ./build/GUI
+          cd ./build
+          cp -r ../Demucs-Gui/fonts/ ./fonts
+          cp -r ../Demucs-Gui/icon/ ./icon
+          mkdir pretrained
+          cp ../build-repo/htdemucs.yaml ./pretrained/htdemucs.yaml
+          curl https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th -o ./pretrained/955717e8-8726e21a.th
+          tar -xvf ../build-repo/ffmpeg-arm64.tar.xz
+          cp -r ../miniconda3/envs/DemucsPack/lib/Python3.11/site-packages/demucs/remote/ ./remote
+          
+      - name: Pack Demucs GUI
+        run: |
+          conda activate DemucsPack
+          pyinstaller GUI/GuiMain.py -D -w -n Demucs-GUI -i icon/icon.icns --add-data icon:icon --add-data pretrained:pretrained --add-data fonts:fonts --add-data remote:demucs/remote --add-data bin:ffmpeg --add-data dylibs:. --osx-bundle-identifier com.demucs.gui --contents-directory "." --distpath "./dist" --clean
+          rm -rf build
+          zip -r Demucs-GUI.zip dist/Demucs-GUI.app
+
+      - name: Upload Demucs GUI
+        uses: actions/upload-artifact@v4
+        with:
+          name: Demucs-GUI
+          path: ./Demucs-GUI.zip
