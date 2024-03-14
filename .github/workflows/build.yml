@@ -45,7 +45,6 @@ jobs:
       - name: Set up conda environment
         run: |
           conda create -n DemucsPack python=3.11
-          conda init bash
           conda activate DemucsPack
           pip install -r Demucs-Gui/requirements.txt
           pip cache purge
@@ -63,7 +62,7 @@ jobs:
           cp ../build-repo/htdemucs.yaml ./pretrained/htdemucs.yaml
           curl https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th -o ./pretrained/955717e8-8726e21a.th
           tar -xvf ../build-repo/ffmpeg-arm64.tar.xz
-          cp -r "$(python3 -c "import pathlib,demucs;print(pathlib.Path(demucs.__file__.parent/remote),end='/'")" ./remote
+          cp -r "$(python3 -c "import pathlib,demucs;print(pathlib.Path(demucs.__file__.parent/remote),end='/'"))" ./remote
           
       - name: Pack Demucs GUI
         run: |
