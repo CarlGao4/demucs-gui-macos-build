@@ -29,13 +29,16 @@ jobs:
           path: 'Demucs-Gui'
 
       - name: Install miniconda
+        shell: bash
         run: |
           mkdir -p ./miniconda3
           curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o ./miniconda3/miniconda.sh
           bash ./miniconda3/miniconda.sh -b -u -p ./miniconda3
           rm -rf ./miniconda3/miniconda.sh
+          ./miniconda3/bin/conda init bash
 
       - name: Set up conda environment
+        shell: bash
         run: |
           ./miniconda3/bin/conda create -n DemucsPack python=3.11
           ./miniconda3/bin/conda activate DemucsPack
@@ -45,6 +48,7 @@ jobs:
           pip cache purge
 
       - name: Prepare data
+        shell: bash
         run: |
           mkdir ./build
           cp -r Demucs-Gui/GUI/ ./build/GUI
@@ -58,6 +62,7 @@ jobs:
           cp -r ../miniconda3/envs/DemucsPack/lib/Python3.11/site-packages/demucs/remote/ ./remote
           
       - name: Pack Demucs GUI
+        shell: bash
         run: |
           ./miniconda3/bin/conda activate DemucsPack
           cd ./build
