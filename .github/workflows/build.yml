@@ -12,6 +12,9 @@ jobs:
   build:
     runs-on: macos-14
     name: Build Demucs-GUI macOS ARM64
+    defaults:
+      run:
+        shell: bash -el {0}
     steps:
       - name: Checkout current repository
         uses: actions/checkout@v4
@@ -40,7 +43,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
 
       - name: Set up conda environment
-        shell: bash
         run: |
           conda create -n DemucsPack python=3.11
           conda init bash
@@ -51,7 +53,6 @@ jobs:
           pip cache purge
 
       - name: Prepare data
-        shell: bash
         run: |
           mkdir ./build
           cp -r Demucs-Gui/GUI/ ./build/GUI
@@ -65,7 +66,6 @@ jobs:
           cp -r ../miniconda3/envs/DemucsPack/lib/Python3.11/site-packages/demucs/remote/ ./remote
           
       - name: Pack Demucs GUI
-        shell: bash
         run: |
           conda activate DemucsPack
           cd ./build
