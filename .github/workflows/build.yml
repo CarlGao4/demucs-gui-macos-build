@@ -71,7 +71,8 @@ jobs:
           cd ./build
           pyinstaller GUI/GuiMain.py -D -w -n Demucs-GUI -i icon/icon.icns --add-data icon:icon --add-data pretrained:pretrained --add-data fonts:fonts --add-data remote:demucs/remote --add-data bin:ffmpeg --add-data dylibs:. --osx-bundle-identifier com.demucs.gui --contents-directory "." --distpath "./dist" --clean
           rm -rf build
-          zip -r Demucs-GUI.zip dist/Demucs-GUI.app
+          cd dist
+          tar -cJvf Demucs-GUI.tar.xz Demucs-GUI.app
 
       - name: Upload Demucs GUI
         uses: actions/upload-artifact@v4
