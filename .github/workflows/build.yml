@@ -34,13 +34,11 @@ jobs:
           curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o ./miniconda3/miniconda.sh
           bash ./miniconda3/miniconda.sh -b -u -p ./miniconda3
           rm -rf ./miniconda3/miniconda.sh
-          ./miniconda3/bin/conda init bash
-          source ~/.bash_profile
 
       - name: Set up conda environment
         run: |
-          conda create -n DemucsPack python=3.11
-          conda activate DemucsPack
+          ./miniconda3/bin/conda create -n DemucsPack python=3.11
+          ./miniconda3/bin/conda activate DemucsPack
           pip install -r Demucs-Gui/requirements.txt
           pip cache purge
           pip install pyinstaller
@@ -61,7 +59,8 @@ jobs:
           
       - name: Pack Demucs GUI
         run: |
-          conda activate DemucsPack
+          ./miniconda3/bin/conda activate DemucsPack
+          cd ./build
           pyinstaller GUI/GuiMain.py -D -w -n Demucs-GUI -i icon/icon.icns --add-data icon:icon --add-data pretrained:pretrained --add-data fonts:fonts --add-data remote:demucs/remote --add-data bin:ffmpeg --add-data dylibs:. --osx-bundle-identifier com.demucs.gui --contents-directory "." --distpath "./dist" --clean
           rm -rf build
           zip -r Demucs-GUI.zip dist/Demucs-GUI.app
@@ -70,4 +69,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Demucs-GUI
-          path: ./Demucs-GUI.zip
+          path: ./build/Demucs-GUI.zip
