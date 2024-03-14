@@ -28,20 +28,23 @@ jobs:
           submodules: 'recursive'
           path: 'Demucs-Gui'
 
+      # - name: Install miniconda
+      #   shell: bash
+      #   run: |
+      #     mkdir -p ./miniconda3
+      #     curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o ./miniconda3/miniconda.sh
+      #     bash ./miniconda3/miniconda.sh -b -u -p ./miniconda3
+      #     rm -rf ./miniconda3/miniconda.sh
+
       - name: Install miniconda
-        shell: bash
-        run: |
-          mkdir -p ./miniconda3
-          curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o ./miniconda3/miniconda.sh
-          bash ./miniconda3/miniconda.sh -b -u -p ./miniconda3
-          rm -rf ./miniconda3/miniconda.sh
+        uses: conda-incubator/setup-miniconda@v3
 
       - name: Set up conda environment
         shell: bash
         run: |
-          ./miniconda3/bin/conda create -n DemucsPack python=3.11
-          ./miniconda3/bin/conda init bash
-          ./miniconda3/bin/conda activate DemucsPack
+          conda create -n DemucsPack python=3.11
+          conda init bash
+          conda activate DemucsPack
           pip install -r Demucs-Gui/requirements.txt
           pip cache purge
           pip install pyinstaller
@@ -64,7 +67,7 @@ jobs:
       - name: Pack Demucs GUI
         shell: bash
         run: |
-          ./miniconda3/bin/conda activate DemucsPack
+          conda activate DemucsPack
           cd ./build
           pyinstaller GUI/GuiMain.py -D -w -n Demucs-GUI -i icon/icon.icns --add-data icon:icon --add-data pretrained:pretrained --add-data fonts:fonts --add-data remote:demucs/remote --add-data bin:ffmpeg --add-data dylibs:. --osx-bundle-identifier com.demucs.gui --contents-directory "." --distpath "./dist" --clean
           rm -rf build
