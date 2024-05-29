@@ -38,7 +38,7 @@ jobs:
         run: |
           conda create -n DemucsPack python=3.11
           conda activate DemucsPack
-          pip install -r Demucs-Gui/requirements.txt
+          pip install -r build-repo/requirements.txt
           pip cache purge
           pip install pyinstaller==6.5.0
           pip cache purge
