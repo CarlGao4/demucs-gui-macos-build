@@ -19,7 +19,7 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           path: 'build-repo'
 
       - name: Checkout Demucs GUI
@@ -27,7 +27,7 @@ jobs:
         with:
           repository: 'CarlGao4/Demucs-Gui'
           ref: ${{ github.event.inputs.commit }}
-          fetch-depth: 0
+          fetch-depth: 1
           submodules: 'recursive'
           path: 'Demucs-Gui'
 
