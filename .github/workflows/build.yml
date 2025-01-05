@@ -56,7 +56,7 @@ jobs:
           tar -xvf ../build-repo/ffmpeg-arm64.tar.xz
           conda activate DemucsPack
           cp -r `python3 -c "import pathlib,demucs;print(pathlib.Path(demucs.__file__).parent/'remote',end='/')"` ./remote
-          
+
       - name: Pack Demucs GUI
         run: |
           conda activate DemucsPack
