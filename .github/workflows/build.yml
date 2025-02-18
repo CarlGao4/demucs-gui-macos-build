@@ -7,9 +7,13 @@ on:
         description: 'Commit to build'
         required: true
         default: 'main'
+      version-tag:
+        description: 'Version tag'
+        required: true
+        default: '0.1'
 
 jobs:
-  build:
+  build-arm64:
     runs-on: macos-14
     name: Build Demucs-GUI macOS ARM64
     defaults:
@@ -63,11 +67,92 @@ jobs:
           cd ./build
           pyinstaller GUI/GuiMain.py -D -w -n Demucs-GUI -i icon/icon.icns --add-data icon:icon --add-data pretrained:pretrained --add-data fonts:fonts --add-data remote:demucs/remote --add-data bin:ffmpeg --add-data dylibs:. --osx-bundle-identifier com.demucs.gui --contents-directory "." --distpath "./dist" --clean
           rm -rf build
-          cd dist
-          tar -cJvf Demucs-GUI.tar.xz Demucs-GUI.app
+
+      - name: Create DMG
+        run: |
+          cd build-repo
+          xz -d Demucs-GUI_ARM64_editable.dmg.xz
+          hdiutil attach Demucs-GUI_ARM64_editable.dmg
+          rm -rf /Volumes/Demucs-GUI/Demucs-GUI.app/
+          sudo cp -a ../build/dist/Demucs-GUI.app /Volumes/Demucs-GUI/
+          diskutil rename /Volumes/Demucs-GUI "Demucs-GUI ${{ github.event.inputs.version-tag }} ARM64"
+          hdiutil detach "/Volumes/Demucs-GUI ${{ github.event.inputs.version-tag }} ARM64"
+          hdiutil convert Demucs-GUI_ARM64_editable.dmg -format UDZO -o Demucs-GUI_${{ github.event.inputs.version-tag }}_macOS_ARM64.dmg
 
       - name: Upload Demucs GUI
         uses: actions/upload-artifact@v4
         with:
-          name: Demucs-GUI
-          path: ./build/dist/Demucs-GUI.tar.xz
+          name: Demucs-GUI-ARM64
+          path: ./build-repo/Demucs-GUI_${{ github.event.inputs.version-tag }}_macOS_ARM64.dmg
+
+  build-x86:
+    runs-on: macos-13
+    name: Build Demucs-GUI macOS x86_64
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          path: 'build-repo'
+
+      - name: Checkout Demucs GUI
+        uses: actions/checkout@v4
+        with:
+          repository: 'CarlGao4/Demucs-Gui'
+          ref: ${{ github.event.inputs.commit }}
+          fetch-depth: 1
+          submodules: 'recursive'
+          path: 'Demucs-Gui'
+
+      - name: Install miniconda
+        uses: conda-incubator/setup-miniconda@v3
+
+      - name: Set up conda environment
+        run: |
+          conda create -n DemucsPack python=3.11
+          conda activate DemucsPack
+          pip install -r Demucs-Gui/requirements.txt
+          pip cache purge
+          pip install pyinstaller==6.5.0
+          pip cache purge
+
+      - name: Prepare data
+        run: |
+          mkdir ./build
+          cp -r Demucs-Gui/GUI/ ./build/GUI
+          cd ./build
+          cp -r ../Demucs-Gui/fonts/ ./fonts
+          cp -r ../Demucs-Gui/icon/ ./icon
+          mkdir pretrained
+          cp ../build-repo/htdemucs.yaml ./pretrained/htdemucs.yaml
+          curl https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th -o ./pretrained/955717e8-8726e21a.th
+          tar -xvf ../build-repo/ffmpeg-x86_64.tar.xz
+          conda activate DemucsPack
+          cp -r `python3 -c "import pathlib,demucs;print(pathlib.Path(demucs.__file__).parent/'remote',end='/')"` ./remote
+
+      - name: Pack Demucs GUI
+        run: |
+          conda activate DemucsPack
+          cd ./build
+          pyinstaller GUI/GuiMain.py -D -w -n Demucs-GUI -i icon/icon.icns --add-data icon:icon --add-data pretrained:pretrained --add-data fonts:fonts --add-data remote:demucs/remote --add-data ffmpeg:ffmpeg --add-data dylibs:. --osx-bundle-identifier com.demucs.gui --contents-directory "." --distpath "./dist" --clean
+          rm -rf build
+
+      - name: Create DMG
+        run: |
+          cd build-repo
+          xz -d Demucs-GUI_ARM64_editable.dmg.xz
+          hdiutil attach Demucs-GUI_ARM64_editable.dmg
+          rm -rf /Volumes/Demucs-GUI/Demucs-GUI.app
+          sudo cp -a ../build/dist/Demucs-GUI.app /Volumes/Demucs-GUI/
+          diskutil rename /Volumes/Demucs-GUI "Demucs-GUI ${{ github.event.inputs.version-tag }} x86_64 Rosetta2"
+          hdiutil detach "/Volumes/Demucs-GUI ${{ github.event.inputs.version-tag }} x86_64 Rosetta2"
+          hdiutil convert Demucs-GUI_ARM64_editable.dmg -format UDZO -o Demucs-GUI_${{ github.event.inputs.version-tag }}_macOS_x86_64_Rosetta2.dmg
+
+      - name: Upload Demucs GUI
+        uses: actions/upload-artifact@v4
+        with:
+          name: Demucs-GUI-x86_64
+          path: ./build-repo/Demucs-GUI_${{ github.event.inputs.version-tag }}_macOS_x86_64_Rosetta2.dmg
