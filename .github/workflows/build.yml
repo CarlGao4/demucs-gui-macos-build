@@ -56,7 +56,8 @@ jobs:
           cp -r ../Demucs-Gui/icon/ ./icon
           mkdir pretrained
           cp ../build-repo/htdemucs.yaml ./pretrained/htdemucs.yaml
-          curl https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th -o ./pretrained/955717e8-8726e21a.th
+          curl -JL https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th -o ./pretrained/955717e8-8726e21a.th
+          curl -JL https://huggingface.co/JusperLee/Apollo/resolve/main/pytorch_model.bin -o ./pretrained/pytorch_model.bin
           tar -xvf ../build-repo/ffmpeg-arm64.tar.xz
           conda activate DemucsPack
           cp -r `python3 -c "import pathlib,demucs;print(pathlib.Path(demucs.__file__).parent/'remote',end='/')"` ./remote
